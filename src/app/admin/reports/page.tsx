@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+export const dynamic = "force-dynamic";
 export default async function ReportsPage() {
   const [learners, courses, pending, payments] = await Promise.all([
     prisma.user.count({ where: { role: "learner" } }),

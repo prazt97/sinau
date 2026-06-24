@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+export const dynamic = "force-dynamic";
 export default async function AdminCourses() {
   const courses = await prisma.course.findMany({
     where: { status: "review" },

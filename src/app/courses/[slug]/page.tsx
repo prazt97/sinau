@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { readSession, sessionCookie } from "@/lib/auth/session";
+export const dynamic = "force-dynamic";
 export default async function CourseDetail({
   params,
 }: {

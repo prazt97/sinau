@@ -1,2 +1,3 @@
 import { prisma } from "@/lib/db/prisma";
+export const dynamic = "force-dynamic";
 export default async function VouchersPage() { const vouchers = await prisma.vouchers.findMany({ orderBy: { created_at: "desc" } }); return <main className="p-6"><h1 className="text-2xl font-bold">Voucher</h1><div className="mt-6 space-y-3">{vouchers.map((voucher) => <article key={voucher.id} className="rounded-xl bg-white p-4 shadow-sm"><h2 className="font-semibold">{voucher.code} — {voucher.name}</h2><p className="text-sm">{voucher.discount_type}: {Number(voucher.discount_value)}</p><p className="text-xs">{voucher.is_active ? "Aktif" : "Nonaktif"}</p></article>)}</div></main>; }

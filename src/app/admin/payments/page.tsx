@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+export const dynamic = "force-dynamic";
 export default async function AdminPayments() {
   const payments = await prisma.payment_confirmations.findMany({
     where: { status: "pending" },

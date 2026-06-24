@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { prisma } from "@/lib/db/prisma";
 import { readSession, sessionCookie } from "@/lib/auth/session";
+export const dynamic = "force-dynamic";
 export default async function MyCourses() {
   const session = await readSession(
     (await cookies()).get(sessionCookie)?.value,

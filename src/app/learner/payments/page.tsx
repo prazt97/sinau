@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { readSession, sessionCookie } from "@/lib/auth/session";
+export const dynamic = "force-dynamic";
 export default async function PaymentsPage() {
   const session = await readSession(
     (await cookies()).get(sessionCookie)?.value,
