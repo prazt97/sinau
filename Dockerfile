@@ -3,6 +3,8 @@ FROM node:24-alpine AS base
 FROM base AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
+COPY prisma ./prisma
+COPY prisma.config.ts ./
 RUN npm ci
 
 FROM base AS builder
