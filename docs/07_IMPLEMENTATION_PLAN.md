@@ -322,7 +322,7 @@ Learner dapat belajar setelah enrolled.
 
 ---
 
-## 15. Phase 13 — Tutor Assignment & Support
+## 15. Phase 13 — Tutor Assignment & Support — Status: complete
 
 ### Tujuan
 Tutor dapat mendampingi learner.
@@ -344,7 +344,7 @@ Tutor dapat mendampingi learner.
 
 ---
 
-## 16. Phase 14 — Assessment: Quiz & Assignment
+## 16. Phase 14 — Assessment: Quiz & Assignment — Status: complete
 
 ### Tujuan
 Menyediakan evaluasi belajar.
@@ -367,7 +367,7 @@ Menyediakan evaluasi belajar.
 
 ---
 
-## 17. Phase 15 — Admin Reporting
+## 17. Phase 15 — Admin Reporting — Status: complete
 
 ### Tujuan
 Admin dapat melihat laporan operasional.
@@ -389,7 +389,7 @@ Admin dapat melihat laporan operasional.
 
 ---
 
-## 18. Phase 16 — UI Polish & Accessibility
+## 18. Phase 16 — UI Polish & Accessibility — Status: complete
 
 ### Tujuan
 Meningkatkan kualitas UX.
@@ -412,7 +412,7 @@ Meningkatkan kualitas UX.
 
 ---
 
-## 19. Phase 17 — Testing & UAT
+## 19. Phase 17 — Testing & UAT — Status: complete
 
 ### Tujuan
 Memastikan fitur inti stabil.
@@ -435,7 +435,7 @@ Memastikan fitur inti stabil.
 
 ---
 
-## 20. Phase 18 — Railway Production Deployment
+## 20. Phase 18 — Railway Production Deployment — Status: complete
 
 ### Tujuan
 Deploy production.
