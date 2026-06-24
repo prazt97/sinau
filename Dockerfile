@@ -11,7 +11,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN npm run db:generate && npm run build
 
 FROM base AS runner
 WORKDIR /app
