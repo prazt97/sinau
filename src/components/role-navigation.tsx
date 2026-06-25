@@ -38,6 +38,7 @@ const navigation = {
     ["Tutor Assignment", "/admin/tutor-assignments", "Penugasan tutor"],
     ["Reports", "/admin/reports", "Laporan dasar"],
     ["Settings", "/admin/settings", "Konfigurasi"],
+    ["Profile", "/admin/profile", "Akun dan keamanan"],
   ],
 } as const;
 
