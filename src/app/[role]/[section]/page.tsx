@@ -1,17 +1,9 @@
 import { notFound } from "next/navigation";
 
 const titles: Record<string, Record<string, string>> = {
-  learner: { discussions: "Discussion" },
-  creator: {
-    courses: "My Courses",
-    reviews: "Submissions for Review",
-  },
-  tutor: {
-    courses: "Assigned Courses",
-    learners: "Learners",
-    discussions: "Discussions",
-    assignments: "Assignment Reviews",
-  },
+  learner: {},
+  creator: {},
+  tutor: {},
   admin: {
     enrollments: "Enrollments",
     "tutor-assignments": "Tutor Assignment",

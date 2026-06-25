@@ -6,42 +6,46 @@ import { prisma } from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function CreatorDashboard() {
+export default async function TutorDashboardPage() {
   const session = await readSession(
     (await cookies()).get(sessionCookie)?.value,
   );
   if (!session) redirect("/auth/login");
-  if (!["creator", "admin"].includes(session.role))
-    redirect(`/${session.role}/dashboard`);
+  if (session.role !== "tutor") redirect(`/${session.role}/dashboard`);
 
-  const where = session.role === "admin" ? {} : { creatorId: session.id };
-  const [total, draft, review, published] = await Promise.all([
-    prisma.course.count({ where }),
-    prisma.course.count({ where: { ...where, status: "draft" } }),
-    prisma.course.count({ where: { ...where, status: "review" } }),
-    prisma.course.count({ where: { ...where, status: "published" } }),
+  const assignments = await prisma.tutor_assignments.findMany({
+    where: { tutor_id: session.id, is_active: true },
+    include: { courses: true },
+  });
+  const courseIds = assignments.map((item) => item.course_id);
+  const [learners, discussions, submissions] = await Promise.all([
+    prisma.enrollments.count({ where: { course_id: { in: courseIds } } }),
+    prisma.discussions.count({ where: { course_id: { in: courseIds } } }),
+    prisma.assignment_submissions.count({
+      where: { assignments: { course_id: { in: courseIds } } },
+    }),
   ]);
   const stats = [
-    ["Total Course", total.toLocaleString("id-ID")],
-    ["Draft", draft.toLocaleString("id-ID")],
-    ["In Review", review.toLocaleString("id-ID")],
-    ["Published", published.toLocaleString("id-ID")],
+    ["Assigned Courses", assignments.length.toLocaleString("id-ID")],
+    ["Learners", learners.toLocaleString("id-ID")],
+    ["Discussions", discussions.toLocaleString("id-ID")],
+    ["Submissions", submissions.toLocaleString("id-ID")],
   ];
 
   return (
     <main className="p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard Creator</h1>
+          <h1 className="text-2xl font-bold">Dashboard Tutor</h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            Ringkasan course draft, review, dan published.
+            Ringkasan course dampingan, learner, diskusi, dan tugas.
           </p>
         </div>
         <Link
+          href="/tutor/discussions"
           className="w-fit rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white outline-none transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500"
-          href="/creator/courses/new"
         >
-          Buat Course
+          Review Discussions
         </Link>
       </div>
 

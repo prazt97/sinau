@@ -5,27 +5,27 @@ import { usePathname } from "next/navigation";
 
 const navigation = {
   learner: [
-    ["Dashboard", "/learner/dashboard"],
-    ["Catalog", "/catalog"],
-    ["My Courses", "/learner/courses"],
-    ["Payment Status", "/learner/payments"],
-    ["Discussion", "/learner/discussions"],
-    ["Profile", "/learner/profile"],
+    ["Dashboard", "/learner/dashboard", "Ringkasan belajar"],
+    ["Catalog", "/catalog", "Cari course"],
+    ["My Courses", "/learner/courses", "Course aktif"],
+    ["Payment Status", "/learner/payments", "Status pembayaran"],
+    ["Discussions", "/learner/discussions", "Tanya tutor"],
+    ["Profile", "/learner/profile", "Akun dan keamanan"],
   ],
   creator: [
-    ["Dashboard", "/creator/dashboard"],
-    ["My Courses", "/creator/courses"],
-    ["Course Builder", "/creator/courses/new"],
-    ["Submissions for Review", "/creator/reviews"],
-    ["Profile", "/creator/profile"],
+    ["Dashboard", "/creator/dashboard", "Ringkasan konten"],
+    ["My Courses", "/creator/courses", "Draft dan published"],
+    ["Create Course", "/creator/courses/new", "Buat draft"],
+    ["Submissions", "/creator/reviews", "Status review"],
+    ["Profile", "/creator/profile", "Akun dan keamanan"],
   ],
   tutor: [
-    ["Dashboard", "/tutor/dashboard"],
-    ["Assigned Courses", "/tutor/courses"],
-    ["Learners", "/tutor/learners"],
-    ["Discussions", "/tutor/discussions"],
-    ["Assignment Reviews", "/tutor/assignments"],
-    ["Profile", "/tutor/profile"],
+    ["Dashboard", "/tutor/dashboard", "Ringkasan mentoring"],
+    ["Assigned Courses", "/tutor/courses", "Course dampingan"],
+    ["Learners", "/tutor/learners", "Progress learner"],
+    ["Discussions", "/tutor/discussions", "Pertanyaan learner"],
+    ["Assignment Reviews", "/tutor/assignments", "Feedback tugas"],
+    ["Profile", "/tutor/profile", "Akun dan keamanan"],
   ],
   admin: [
     ["Dashboard", "/admin/dashboard", "Ringkasan operasional"],
@@ -45,7 +45,6 @@ const navigation = {
 export function RoleNavigation({ role }: { role: keyof typeof navigation }) {
   const pathname = usePathname();
   const items = navigation[role];
-  const isAdmin = role === "admin";
 
   return (
     <>
@@ -83,7 +82,7 @@ export function RoleNavigation({ role }: { role: keyof typeof navigation }) {
                 }`}
               >
                 <span className="block font-medium">{label}</span>
-                {isAdmin && description ? (
+                {description ? (
                   <span
                     className={`mt-0.5 block text-xs ${
                       isActive
