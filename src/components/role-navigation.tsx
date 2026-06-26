@@ -31,6 +31,7 @@ const navigation = {
     ["Dashboard", "/admin/dashboard", "Ringkasan operasional"],
     ["Users", "/admin/users", "User dan role"],
     ["Courses", "/admin/courses", "Review dan publish"],
+    ["Published Course", "/admin/published-courses", "Status dan harga"],
     ["Pricing", "/admin/pricing", "Harga course"],
     ["Vouchers", "/admin/vouchers", "Diskon dan limit"],
     ["Payments", "/admin/payments", "Verifikasi manual"],

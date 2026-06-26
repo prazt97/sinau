@@ -18,9 +18,17 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 },
       );
-    const price = await prisma.coursePrice.create({
-      data: { courseId, regularPrice, promoPrice, createdBy: admin.id },
+    const price = await prisma.$transaction(async (tx) => {
+      await tx.coursePrice.updateMany({
+        where: { courseId, isActive: true },
+        data: { isActive: false },
+      });
+
+      return tx.coursePrice.create({
+        data: { courseId, regularPrice, promoPrice, createdBy: admin.id },
+      });
     });
+
     await prisma.audit_logs.create({
       data: {
         actor_id: admin.id,

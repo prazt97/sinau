@@ -15,6 +15,7 @@ const menus = {
   ],
   admin: [
     ["Review Course", "/admin/courses", "Publish atau revisi"],
+    ["Published Course", "/admin/published-courses", "Status dan harga"],
     ["Pricing", "/admin/pricing", "Atur harga course"],
     ["Payment", "/admin/payments", "Verifikasi manual"],
     ["Voucher", "/admin/vouchers", "Diskon dan limit"],
