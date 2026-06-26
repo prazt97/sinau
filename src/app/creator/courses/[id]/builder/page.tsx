@@ -47,7 +47,14 @@ export default function Builder({
   const [isLoading, setIsLoading] = useState(true);
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [course, setCourse] = useState<CourseSummary>();
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const firstModuleId = useMemo(() => modules[0]?.id ?? "", [modules]);
+  const hasLesson = useMemo(
+    () => modules.some((courseModule) => courseModule.lessons.length > 0),
+    [modules],
+  );
+  const canSubmitReview =
+    course?.status === "draft" && modules.length > 0 && hasLesson;
 
   const loadContent = useCallback(async () => {
     setIsLoading(true);
@@ -84,16 +91,47 @@ export default function Builder({
     }
   }
 
+  async function submitForReview() {
+    setMessage("");
+    setIsSubmittingReview(true);
+
+    const response = await fetch(`/api/courses/${id}/submit-review`, {
+      method: "POST",
+    });
+    const result = (await response.json()) as { message: string };
+
+    setMessage(result.message);
+    setIsSubmittingReview(false);
+
+    if (response.ok) await loadContent();
+  }
+
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
-      <div>
-        <h1 className="text-2xl font-bold">Course Builder</h1>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          {course
-            ? `${course.title} - ${course.status}`
-            : "Susun module dan lesson untuk course draft atau review."}
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Course Builder</h1>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            {course
+              ? `${course.title} - ${course.status}`
+              : "Susun module dan lesson untuk course draft atau review."}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={submitForReview}
+          disabled={!canSubmitReview || isSubmittingReview}
+          className="w-fit rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white outline-none transition hover:bg-teal-700 focus-visible:ring-2 focus-visible:ring-teal-500 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSubmittingReview ? "Mengirim..." : "Submit Course"}
+        </button>
       </div>
+
+      {course?.status === "draft" && !canSubmitReview ? (
+        <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-200">
+          Tambahkan minimal satu module dan satu lesson sebelum submit course.
+        </p>
+      ) : null}
 
       <div className="mt-5">
         <CourseMenu role="creator" />
