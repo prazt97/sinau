@@ -14,8 +14,10 @@ const menus = {
     ["Create Draft", "/creator/courses/new", "Buat course baru"],
   ],
   admin: [
-    ["Review", "/admin/courses", "Publish atau revisi course"],
+    ["Review Course", "/admin/courses", "Publish atau revisi"],
     ["Pricing", "/admin/pricing", "Atur harga course"],
+    ["Payment", "/admin/payments", "Verifikasi manual"],
+    ["Voucher", "/admin/vouchers", "Diskon dan limit"],
     ["Enrollments", "/admin/enrollments", "Pantau akses learner"],
     ["Reports", "/admin/reports", "Lihat performa course"],
   ],
