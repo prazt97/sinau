@@ -26,7 +26,14 @@ type CourseModule = {
   lessons: Lesson[];
 };
 
-type CourseSummary = { title: string; status: string };
+type CourseSummary = {
+  title: string;
+  slug: string;
+  status: string;
+  level: string | null;
+  shortDescription: string | null;
+  description: string | null;
+};
 
 type ContentResponse = {
   success: boolean;
@@ -91,6 +98,19 @@ export default function Builder({
     }
   }
 
+  async function updateContent(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setMessage("");
+    const response = await fetch(`/api/courses/${id}/content`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.fromEntries(new FormData(e.currentTarget))),
+    });
+    const result = (await response.json()) as { message: string };
+    setMessage(result.message);
+    if (response.ok) await loadContent();
+  }
+
   async function submitForReview() {
     setMessage("");
     setIsSubmittingReview(true);
@@ -137,6 +157,67 @@ export default function Builder({
         <CourseMenu role="creator" />
       </div>
 
+      {course ? (
+        <form
+          onSubmit={updateContent}
+          className="mt-6 grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        >
+          <input type="hidden" name="type" value="course" />
+          <h2 className="text-base font-semibold">Edit Course</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1 text-sm font-medium">
+              Judul course <span className="text-red-600">*</span>
+              <input
+                name="title"
+                required
+                defaultValue={course.title}
+                className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+              />
+            </label>
+            <label className="grid gap-1 text-sm font-medium">
+              Slug <span className="text-red-600">*</span>
+              <input
+                name="slug"
+                required
+                defaultValue={course.slug}
+                className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+              />
+            </label>
+          </div>
+          <label className="grid gap-1 text-sm font-medium">
+            Level
+            <select
+              name="level"
+              defaultValue={course.level ?? "beginner"}
+              className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+            >
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm font-medium">
+            Deskripsi singkat
+            <textarea
+              name="shortDescription"
+              defaultValue={course.shortDescription ?? ""}
+              className="min-h-24 rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+            />
+          </label>
+          <label className="grid gap-1 text-sm font-medium">
+            Deskripsi lengkap
+            <textarea
+              name="description"
+              defaultValue={course.description ?? ""}
+              className="min-h-32 rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+            />
+          </label>
+          <button className="justify-self-end rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white outline-none transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">
+            Update Course
+          </button>
+        </form>
+      ) : null}
+
       <section className="mt-6 grid gap-4">
         {isLoading ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
@@ -167,6 +248,47 @@ export default function Builder({
                 </span>
               </div>
 
+              <form
+                onSubmit={updateContent}
+                className="mt-4 grid gap-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-950"
+              >
+                <input type="hidden" name="type" value="module" />
+                <input type="hidden" name="moduleId" value={courseModule.id} />
+                <h3 className="text-sm font-semibold">Edit Module</h3>
+                <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+                  <label className="grid gap-1 text-sm font-medium">
+                    Judul <span className="text-red-600">*</span>
+                    <input
+                      name="title"
+                      required
+                      defaultValue={courseModule.title}
+                      className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-900 dark:focus:ring-blue-950"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium">
+                    Urutan
+                    <input
+                      name="sortOrder"
+                      type="number"
+                      min="0"
+                      defaultValue={courseModule.sortOrder}
+                      className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-900 dark:focus:ring-blue-950"
+                    />
+                  </label>
+                </div>
+                <label className="grid gap-1 text-sm font-medium">
+                  Deskripsi
+                  <textarea
+                    name="description"
+                    defaultValue={courseModule.description ?? ""}
+                    className="min-h-20 rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-900 dark:focus:ring-blue-950"
+                  />
+                </label>
+                <button className="justify-self-end rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 outline-none transition hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-blue-900 dark:text-blue-300 dark:hover:bg-blue-950">
+                  Update Module
+                </button>
+              </form>
+
               <div className="mt-4 grid gap-2">
                 {courseModule.lessons.map((lesson) => (
                   <div
@@ -184,6 +306,77 @@ export default function Builder({
                         {lesson.content}
                       </p>
                     ) : null}
+                    <form
+                      onSubmit={updateContent}
+                      className="mt-3 grid gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
+                    >
+                      <input type="hidden" name="type" value="lesson" />
+                      <input type="hidden" name="lessonId" value={lesson.id} />
+                      <h4 className="text-sm font-semibold">Edit Lesson</h4>
+                      <label className="grid gap-1 text-sm font-medium">
+                        Module <span className="text-red-600">*</span>
+                        <select
+                          name="moduleId"
+                          required
+                          defaultValue={courseModule.id}
+                          className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+                        >
+                          {modules.map((moduleOption) => (
+                            <option
+                              key={moduleOption.id}
+                              value={moduleOption.id}
+                            >
+                              {moduleOption.title}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <div className="grid gap-3 sm:grid-cols-[1fr_140px_120px]">
+                        <label className="grid gap-1 text-sm font-medium">
+                          Judul <span className="text-red-600">*</span>
+                          <input
+                            name="title"
+                            required
+                            defaultValue={lesson.title}
+                            className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+                          />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium">
+                          Tipe
+                          <select
+                            name="lessonType"
+                            defaultValue={lesson.lessonType}
+                            className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+                          >
+                            <option value="text">Text</option>
+                            <option value="video">Video</option>
+                            <option value="file">File</option>
+                            <option value="embed">Embed</option>
+                          </select>
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium">
+                          Urutan
+                          <input
+                            name="sortOrder"
+                            type="number"
+                            min="0"
+                            defaultValue={lesson.sortOrder}
+                            className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+                          />
+                        </label>
+                      </div>
+                      <label className="grid gap-1 text-sm font-medium">
+                        Konten
+                        <textarea
+                          name="content"
+                          defaultValue={lesson.content ?? ""}
+                          className="min-h-24 rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+                        />
+                      </label>
+                      <button className="justify-self-end rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 outline-none transition hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-blue-900 dark:text-blue-300 dark:hover:bg-blue-950">
+                        Update Lesson
+                      </button>
+                    </form>
                   </div>
                 ))}
                 {!courseModule.lessons.length ? (
