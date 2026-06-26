@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/db/prisma";
 import { CourseMenu } from "@/components/course-menu";
+import {
+  CourseReviewActions,
+  DeleteCourseContentButton,
+} from "./course-review-actions";
 export const dynamic = "force-dynamic";
 export default async function AdminCourses() {
   const courses = await prisma.course.findMany({
@@ -9,7 +13,14 @@ export default async function AdminCourses() {
       users_courses_creator_idTousers: {
         select: { fullName: true, email: true },
       },
-      modules: { include: { lessons: true } },
+      modules: {
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        include: {
+          lessons: {
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          },
+        },
+      },
     },
   });
   return (
@@ -81,6 +92,81 @@ export default async function AdminCourses() {
                   </div>
                 </dl>
               </div>
+
+              <section className="mt-5 grid gap-3">
+                <h3 className="text-sm font-semibold">Konten Course</h3>
+                {course.modules.map((courseModule) => (
+                  <div
+                    key={courseModule.id}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase text-blue-600 dark:text-blue-300">
+                          Module {courseModule.sortOrder}
+                        </p>
+                        <h4 className="mt-1 text-sm font-semibold">
+                          {courseModule.title}
+                        </h4>
+                        {courseModule.description ? (
+                          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                            {courseModule.description}
+                          </p>
+                        ) : null}
+                      </div>
+                      <DeleteCourseContentButton
+                        courseId={course.id}
+                        item={{
+                          type: "delete-module",
+                          moduleId: courseModule.id,
+                          title: courseModule.title,
+                        }}
+                      />
+                    </div>
+
+                    <div className="mt-3 grid gap-2">
+                      {courseModule.lessons.map((lesson) => (
+                        <div
+                          key={lesson.id}
+                          className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-white p-3 text-sm dark:bg-slate-900"
+                        >
+                          <div>
+                            <p className="font-semibold">{lesson.title}</p>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                              {lesson.lessonType}
+                            </p>
+                            {lesson.content ? (
+                              <p className="mt-2 line-clamp-2 text-slate-600 dark:text-slate-300">
+                                {lesson.content}
+                              </p>
+                            ) : null}
+                          </div>
+                          <DeleteCourseContentButton
+                            courseId={course.id}
+                            item={{
+                              type: "delete-lesson",
+                              lessonId: lesson.id,
+                              title: lesson.title,
+                            }}
+                          />
+                        </div>
+                      ))}
+                      {courseModule.lessons.length === 0 ? (
+                        <p className="rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                          Module ini belum memiliki lesson.
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+                {course.modules.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                    Course belum memiliki module.
+                  </p>
+                ) : null}
+              </section>
+
+              <CourseReviewActions courseId={course.id} />
             </article>
           );
         })}
