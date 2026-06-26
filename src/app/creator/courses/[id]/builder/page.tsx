@@ -1,29 +1,97 @@
 "use client";
-import { FormEvent, useState } from "react";
+import {
+  FormEvent,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { CourseMenu } from "@/components/course-menu";
+
+type Lesson = {
+  id: string;
+  title: string;
+  description: string | null;
+  lessonType: string;
+  content: string | null;
+  sortOrder: number;
+};
+
+type CourseModule = {
+  id: string;
+  title: string;
+  description: string | null;
+  sortOrder: number;
+  lessons: Lesson[];
+};
+
+type CourseSummary = { title: string; status: string };
+
+type ContentResponse = {
+  success: boolean;
+  message: string;
+  data?: {
+    course: CourseSummary;
+    modules: CourseModule[];
+  };
+};
+
 export default function Builder({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [modules, setModules] = useState<CourseModule[]>([]);
+  const [course, setCourse] = useState<CourseSummary>();
+  const firstModuleId = useMemo(() => modules[0]?.id ?? "", [modules]);
+
+  const loadContent = useCallback(async () => {
+    setIsLoading(true);
+    const response = await fetch(`/api/courses/${id}/content`);
+    const result = (await response.json()) as ContentResponse;
+
+    if (response.ok && result.data) {
+      setCourse(result.data.course);
+      setModules(result.data.modules);
+    } else {
+      setMessage(result.message);
+    }
+
+    setIsLoading(false);
+  }, [id]);
+
+  useEffect(() => {
+    void loadContent();
+  }, [loadContent]);
+
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const id = (await params).id;
+    setMessage("");
     const r = await fetch(`/api/courses/${id}/content`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(Object.fromEntries(new FormData(e.currentTarget))),
     });
-    setMessage((await r.json()).message);
-    if (r.ok) e.currentTarget.reset();
+    const result = (await r.json()) as { message: string };
+    setMessage(result.message);
+    if (r.ok) {
+      e.currentTarget.reset();
+      await loadContent();
+    }
   }
+
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-bold">Course Builder</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          Susun module dan lesson untuk course draft atau review.
+          {course
+            ? `${course.title} - ${course.status}`
+            : "Susun module dan lesson untuk course draft atau review."}
         </p>
       </div>
 
@@ -31,58 +99,186 @@ export default function Builder({
         <CourseMenu role="creator" />
       </div>
 
-      <form
-        onSubmit={submit}
-        className="mt-6 grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-      >
-        <label className="grid gap-1 text-sm font-medium">
-          Jenis konten
-          <select
-            name="type"
-            className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
-          >
-            <option value="module">Module</option>
-            <option value="lesson">Lesson</option>
-          </select>
-        </label>
-        <label className="grid gap-1 text-sm font-medium">
-          ID module untuk lesson
-          <input
-            name="moduleId"
-            className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
-          />
-        </label>
-        <label className="grid gap-1 text-sm font-medium">
-          Judul <span className="text-red-600">*</span>
-          <input
-            name="title"
-            required
-            className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
-          />
-        </label>
-        <label className="grid gap-1 text-sm font-medium">
-          Deskripsi module
-          <textarea
-            name="description"
-            className="min-h-24 rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
-          />
-        </label>
-        <label className="grid gap-1 text-sm font-medium">
-          Konten lesson
-          <textarea
-            name="content"
-            className="min-h-32 rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
-          />
-        </label>
-        <button className="justify-self-end rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white outline-none transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">
-          Simpan Konten
-        </button>
-        {message && (
-          <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-700 dark:bg-blue-950 dark:text-blue-200">
-            {message}
-          </p>
+      <section className="mt-6 grid gap-4">
+        {isLoading ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+            Memuat konten course...
+          </div>
+        ) : modules.length ? (
+          modules.map((courseModule) => (
+            <article
+              key={courseModule.id}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-300">
+                    Module {courseModule.sortOrder}
+                  </p>
+                  <h2 className="mt-1 text-base font-semibold">
+                    {courseModule.title}
+                  </h2>
+                  {courseModule.description ? (
+                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                      {courseModule.description}
+                    </p>
+                  ) : null}
+                </div>
+                <span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                  {courseModule.lessons.length} lesson
+                </span>
+              </div>
+
+              <div className="mt-4 grid gap-2">
+                {courseModule.lessons.map((lesson) => (
+                  <div
+                    key={lesson.id}
+                    className="rounded-xl bg-slate-50 p-3 text-sm dark:bg-slate-950"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-semibold">{lesson.title}</p>
+                      <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-200">
+                        {lesson.lessonType}
+                      </span>
+                    </div>
+                    {lesson.content ? (
+                      <p className="mt-2 line-clamp-2 text-slate-600 dark:text-slate-300">
+                        {lesson.content}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+                {!courseModule.lessons.length ? (
+                  <p className="rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                    Belum ada lesson di module ini.
+                  </p>
+                ) : null}
+              </div>
+            </article>
+          ))
+        ) : (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+            Belum ada module. Simpan module pertama sebelum menambahkan lesson.
+          </div>
         )}
-      </form>
+      </section>
+
+      <section className="mt-6 grid gap-4 lg:grid-cols-2">
+        <form
+          onSubmit={submit}
+          className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        >
+          <input type="hidden" name="type" value="module" />
+          <h2 className="text-base font-semibold">Tambah Module</h2>
+          <label className="grid gap-1 text-sm font-medium">
+            Judul <span className="text-red-600">*</span>
+            <input
+              name="title"
+              required
+              className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+            />
+          </label>
+          <label className="grid gap-1 text-sm font-medium">
+            Urutan
+            <input
+              name="sortOrder"
+              type="number"
+              min="0"
+              defaultValue={modules.length + 1}
+              className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+            />
+          </label>
+          <label className="grid gap-1 text-sm font-medium">
+            Deskripsi
+            <textarea
+              name="description"
+              className="min-h-24 rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+            />
+          </label>
+          <button className="justify-self-end rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white outline-none transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">
+            Simpan Module
+          </button>
+        </form>
+
+        <form
+          onSubmit={submit}
+          className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        >
+          <input type="hidden" name="type" value="lesson" />
+          <h2 className="text-base font-semibold">Tambah Lesson</h2>
+          <label className="grid gap-1 text-sm font-medium">
+            Module <span className="text-red-600">*</span>
+            <select
+              name="moduleId"
+              required
+              defaultValue={firstModuleId}
+              disabled={!modules.length}
+              className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+            >
+              {modules.map((courseModule) => (
+                <option key={courseModule.id} value={courseModule.id}>
+                  {courseModule.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm font-medium">
+            Judul <span className="text-red-600">*</span>
+            <input
+              name="title"
+              required
+              disabled={!modules.length}
+              className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+            />
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1 text-sm font-medium">
+              Tipe
+              <select
+                name="lessonType"
+                disabled={!modules.length}
+                className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+              >
+                <option value="text">Text</option>
+                <option value="video">Video</option>
+                <option value="file">File</option>
+                <option value="embed">Embed</option>
+              </select>
+            </label>
+            <label className="grid gap-1 text-sm font-medium">
+              Urutan
+              <input
+                name="sortOrder"
+                type="number"
+                min="0"
+                defaultValue="1"
+                disabled={!modules.length}
+                className="rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+              />
+            </label>
+          </div>
+          <label className="grid gap-1 text-sm font-medium">
+            Konten
+            <textarea
+              name="content"
+              disabled={!modules.length}
+              className="min-h-32 rounded-lg border border-slate-200 bg-white p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-blue-950"
+            />
+          </label>
+          <button
+            disabled={!modules.length}
+            className="justify-self-end rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white outline-none transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Simpan Lesson
+          </button>
+        </form>
+      </section>
+
+      {message && (
+        <p className="mt-4 rounded-xl bg-blue-50 p-3 text-sm text-blue-700 dark:bg-blue-950 dark:text-blue-200">
+          {message}
+        </p>
+      )}
     </main>
   );
 }
