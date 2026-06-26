@@ -5,30 +5,46 @@ export async function POST(request: NextRequest) {
   try {
     const admin = await requireAdmin();
     const body = await request.json();
+    const code = String(body.code ?? "")
+      .trim()
+      .toUpperCase();
+    const discountValue = Number(body.discountValue);
+    const usageLimit =
+      body.usageLimit === undefined ||
+      body.usageLimit === null ||
+      body.usageLimit === ""
+        ? null
+        : Number(body.usageLimit);
+
     if (
-      !body.code ||
+      !/^[A-Z0-9]{7}$/.test(code) ||
       !body.name ||
-      !["percentage", "fixed"].includes(body.discountType) ||
-      Number(body.discountValue) < 0
+      body.discountType !== "percentage" ||
+      discountValue <= 0 ||
+      discountValue > 100 ||
+      (usageLimit !== null && (!Number.isInteger(usageLimit) || usageLimit < 0))
     )
       return NextResponse.json(
         {
           success: false,
-          message: "Voucher tidak valid",
+          message:
+            "Voucher tidak valid. Kode wajib 7 huruf/angka dan discount 1-100%.",
           error_code: "VALIDATION_ERROR",
         },
         { status: 400 },
       );
+
     const voucher = await prisma.vouchers.create({
       data: {
-        code: body.code,
+        code,
         name: body.name,
-        discount_type: body.discountType,
-        discount_value: body.discountValue,
-        course_id: body.courseId,
+        description: body.description,
+        discount_type: "percentage",
+        discount_value: discountValue,
+        course_id: body.courseId || null,
         valid_from: body.validFrom ? new Date(body.validFrom) : null,
         valid_until: body.validUntil ? new Date(body.validUntil) : null,
-        usage_limit: body.usageLimit,
+        usage_limit: usageLimit,
         created_by: admin.id,
       },
     });

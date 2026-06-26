@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { PaymentPricingMenu } from "@/components/payment-pricing-menu";
+import { VoucherForm } from "./voucher-form";
 export const dynamic = "force-dynamic";
 
 const formatDiscount = (type: string, value: number) =>
@@ -12,10 +13,17 @@ const formatDiscount = (type: string, value: number) =>
       }).format(value);
 
 export default async function VouchersPage() {
-  const vouchers = await prisma.vouchers.findMany({
-    orderBy: { created_at: "desc" },
-    include: { courses: true },
-  });
+  const [vouchers, courses] = await Promise.all([
+    prisma.vouchers.findMany({
+      orderBy: { created_at: "desc" },
+      include: { courses: true },
+    }),
+    prisma.course.findMany({
+      where: { status: "published" },
+      orderBy: { title: "asc" },
+      select: { id: true, title: true },
+    }),
+  ]);
 
   return (
     <main className="p-4 sm:p-6">
@@ -29,6 +37,8 @@ export default async function VouchersPage() {
       <div className="mt-5">
         <PaymentPricingMenu role="admin" />
       </div>
+
+      <VoucherForm courses={courses} />
 
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
         {vouchers.map((voucher) => (
